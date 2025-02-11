@@ -1,3 +1,4 @@
+from enum import StrEnum
 from json import loads
 from typing import Annotated, Any
 
@@ -25,6 +26,11 @@ from schema.models import (
     OpenAIModelName,
     Provider,
 )
+
+
+class DatabaseType(StrEnum):
+    SQLITE = "sqlite"
+    POSTGRES = "postgres"
 
 
 def check_str_is_http(x: str) -> str:
@@ -77,6 +83,26 @@ class Settings(BaseSettings):
     AZURE_OPENAI_DEPLOYMENT_MAP: dict[str, str] = Field(
         default_factory=dict, description="Map of model names to Azure deployment IDs"
     )
+
+    # Database Configuration
+    DATABASE_TYPE: DatabaseType = (
+        DatabaseType.SQLITE
+    )  # Options: DatabaseType.SQLITE or DatabaseType.POSTGRES
+    SQLITE_DB_PATH: str = "checkpoints.db"
+
+    # PostgreSQL Configuration
+    POSTGRES_USER: str | None = None
+    POSTGRES_PASSWORD: SecretStr | None = None
+    POSTGRES_HOST: str | None = None
+    POSTGRES_PORT: int | None = None
+    POSTGRES_DB: str | None = None
+    POSTGRES_POOL_SIZE: int = Field(
+        default=10, description="Maximum number of connections in the pool"
+    )
+    POSTGRES_MIN_SIZE: int = Field(
+        default=3, description="Minimum number of connections in the pool"
+    )
+    POSTGRES_MAX_IDLE: int = Field(default=5, description="Maximum number of idle connections")
 
     def model_post_init(self, __context: Any) -> None:
         api_keys = {
